@@ -32,7 +32,7 @@ class TimeNode:
         self.tag = tag
         self.count = count
         self.time = time
-        self.children = SortedSet()
+        self.children = SortedSet(key=lambda node:-node.time)
         self.samples = []
         self.parent = parent
 
@@ -64,8 +64,8 @@ class TimeNode:
     def __hash__(self):
         return hash(self.tag)
 
-    def __cmp__(self, other):
-        return -(self.time-other.time)
+    #def __cmp__(self, other):
+    #    return -(self.time-other.time)
 
     def put(self, taglist, sample, maxlevel=-1):
         if sample.time<0:
@@ -172,8 +172,8 @@ class TimeNode:
         pitems = []
         pidle=0
         for line in file.readlines():
-            iline += 1
-            #try:
+           iline += 1
+           try:
             items = shlex.split(line)
             time = int(items[0])
             if time<options.min_start:
@@ -206,6 +206,6 @@ class TimeNode:
                 ptime = time
                 pitems = items
 
-            #except BaseException as e:
-            #    print("%s(%d): syntax error %s "%(in_file,iline,e))
+           except BaseException as e:
+               print("%s(%d): syntax error %s "%(in_file,iline,e))
 

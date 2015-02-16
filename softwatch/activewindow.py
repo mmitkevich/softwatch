@@ -1,12 +1,14 @@
 import actmon
+import time
 import os
 from subprocess import Popen, PIPE
+import re
 
 class ActiveWindow:
 
 
 
-    #Taken from: http://stackoverflow.com/questions/3983946/get-active-window-title-in-x
+#33    #Taken from: http://stackoverflow.com/questions/3983946/get-active-window-title-in-x
     def get_active_window(self):
         (id_w, err) = Popen(['xdotool', 'getwindowfocus'], stdout=PIPE).communicate()
 

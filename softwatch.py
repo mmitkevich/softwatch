@@ -1,7 +1,10 @@
+#!/usr/bin/python2
+
 import argparse
 from softwatch import activewindow
 from softwatch import timenode
 import sys
+import time
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -16,7 +19,7 @@ if __name__ == '__main__':
 
     if args.action=='log':
         aw = activewindow.ActiveWindow()
-        aw.logfile = args.action
+        aw.logfile = args.file
         aw.monitor_active_window()
         exit(0)
 
@@ -30,6 +33,7 @@ if __name__ == '__main__':
         tr.read(logfile,opts)
         taglist = args.pattern #[0].split(' ')
         tr.query(set(taglist),opts)
+
 
 
 
