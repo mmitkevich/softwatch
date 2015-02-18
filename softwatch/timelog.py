@@ -4,7 +4,7 @@ import os
 from subprocess import Popen, PIPE
 import re
 
-class ActiveWindow:
+class TimeLog:
 
 
 
@@ -50,38 +50,38 @@ class ActiveWindow:
     def get_current_time(self):
         return "%d" % (time.time() * 1000)
 
-    def log_window(self, f, currentcommand, currentwindow):
-        moreinfo = ""
-        if re.search("chrom",currentcommand):
-            (moreinfo,err) =  Popen(['chromix', 'url'], stdout=PIPE).communicate()
+    @staticmethod
+    def log_window(logfile, currentcommand, currentwindow):
+        with open(logfile, "aF+") as f:
+            moreinfo = ""
+            if re.search("chrom",currentcommand):
+                (moreinfo,err) =  Popen(['chromix', 'url'], stdout=PIPE).communicate()
 
-        logstring = "%s %s %s %s\n" % (self.get_current_time(), self.escape(currentcommand), self.escape(currentwindow), self.escape(moreinfo))
-        f.write(logstring)
-        f.flush()
-        print logstring
+            logstring = "%s %s %s %s\n" % (self.get_current_time(), self.escape(currentcommand), self.escape(currentwindow), self.escape(moreinfo))
+            f.write(logstring)
+            f.flush()
+            print logstring
 
     def monitor_active_window(self):
         max_idle_timeout = 3
         cur_idle = False
-        with open(self.logfile, "aF+") as f:
+        lastwindow = None
 
-            lastwindow = None
-
-            try:
-                while True:
-                    curpid, currentwindow = self.get_active_window()
-                    if currentwindow != lastwindow:
-                        currentcommand = self.get_process_command_from_id(curpid)
+        try:
+            while True:
+                curpid, currentwindow = self.get_active_window()
+                if currentwindow != lastwindow:
+                    currentcommand = self.get_process_command_from_id(curpid)
+                    self.log_window(self.logfile, currentcommand, currentwindow)
+                    lastwindow = currentwindow
+                idle = actmon.get_idle_time() > max_idle_timeout*1000
+                if idle!=cur_idle:
+                    cur_idle=idle
+                    if idle:
+                        self.log_window(f, "<idle>", "idle for %d"%max_idle_timeout )
+                    else:
                         self.log_window(f, currentcommand, currentwindow)
-                        lastwindow = currentwindow
-                    idle = actmon.get_idle_time() > max_idle_timeout*1000
-                    if idle!=cur_idle:
-                        cur_idle=idle
-                        if idle:
-                            self.log_window(f, "<idle>", "idle for %d"%max_idle_timeout )
-                        else:
-                            self.log_window(f, currentcommand, currentwindow)
-                    time.sleep(1)
-            except KeyboardInterrupt:
-                self.log_window(f, 'activewindow', 'ActiveWindow terminated')
-                print ""
+                time.sleep(1)
+        except KeyboardInterrupt:
+            self.log_window(f, 'activewindow', 'ActiveWindow terminated')
+            print ""
