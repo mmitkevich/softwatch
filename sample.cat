@@ -1,6 +1,13 @@
-ssltrace = andrx86, ssltrace
-porno = tube8, redtube
-alcatel = kukhta, viktorov
-olga = olga
-trading.btc = icbit, bter, electrum, BitShares
-trading.forts = wine
+ads ssltrace == andrx86 || ssltrace
+porno == tube8 || redtube
+alcatel == kukhta || viktorov || tomcat || java || oracle
+chat family == olga mitkevich
+trading btc == icbit || bter || electrum || BitShares || bitcoinwisdom
+trading forts == transaq
+tarding webmoney == webmoney || exchanger
+accounting == BABKI 2015
+chrome crypto == chrome bitshares || chrome bitcoin
+monodevelop == monodevelop
+idea == idea
+PAC == PAC
+
