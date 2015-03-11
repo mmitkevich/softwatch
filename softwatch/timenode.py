@@ -58,6 +58,8 @@ class TimeQuery:
         self.pitems = []
         self.pidle = 0
         self.relative = False
+        self.away_timeout=15*60*1000 # 15min max work per single program. rest time is 'away'
+        self.min_idle_minutes=60*1000 # if idle less than this->ignore idling
 
 
     def nperiods(self):
@@ -82,14 +84,24 @@ class TimeQuery:
 
             except BaseException as e:
                 print("%s(%d): syntax error %s "%(in_file,self.iline,e))
-                traceback.print_exc(e,sys.stdout)
+                #traceback.print_exc(e,sys.stdout)
 #               raise Error(e)
 
     @staticmethod
     def sample(start,time,taglist):
-        if len(taglist)==0:
-            print "empty taglist in sample"
+#        if len(taglist)==0:
+#            print "empty taglist in sample"
         return TimeSample(start, time, taglist)
+
+    def find_task(self, items, time, keeptime = 0):
+        awords = re.compile('[ /:?&|=\\,@#\]\[\(\)]+').split((items[2]+" "+items[3]).lower())
+        words = filter(lambda w: re.compile('[a-zA-Z]').search(w),awords)
+        for child in self.tasks.children:
+            if child.match(words):
+                return child
+        if items[2].startswith("idle"):
+            return self.away
+        return None
 
     def process(self, items, time, keeptime = 0):
         self.iline += 1
@@ -101,12 +113,14 @@ class TimeQuery:
             tidle=0
             if items[2].startswith("idle"):
                 self.pidle = time
+                return None
             else:
                 if self.pidle!=0:
-                    #if time-self.pidle<5*60*1000:
-                    #    return None
                     tidle=time-self.pidle
                     self.pidle = 0
+                    if tidle<self.min_idle_minutes*1000:
+                        return None
+
             awords = re.compile('[ /:?&|=\\,@#\]\[\(\)]+').split((self.pitems[2]+" "+self.pitems[3]).lower())
             words = filter(lambda w: re.compile('[a-zA-Z]').search(w),awords)
             #if len(awords)!=len(words):
@@ -115,17 +129,16 @@ class TimeQuery:
             if dt<0:
                 #print 'negative staart'
                 return
-            away_timeout=15*60*1000 # 15min max work per single program. rest time is 'away'
             mytask=None
             if tidle>0:
                 if keeptime>0:
                     self.away.put([],self.sample(self.ptime,tidle,words)) #,str(int(dt/away_timeout))+'x'
-            elif (dt>away_timeout):
-                smpl = self.sample(self.ptime,away_timeout,words)
+            elif (dt>self.away_timeout):
+                smpl = self.sample(self.ptime,self.away_timeout,words)
                 if keeptime>0:
                     self.total.put(words, smpl)
                 if keeptime>0:
-                    self.away.put([],self.sample(self.ptime+away_timeout,dt-away_timeout,words)) #,str(int(dt/away_timeout))+'x'
+                    self.away.put([],self.sample(self.ptime+self.away_timeout,dt-self.away_timeout,words)) #,str(int(dt/away_timeout))+'x'
                 mytask = smpl.task = self.tasks.putExpr("*AWAY*", smpl)
             else:
                 smpl = self.sample(self.ptime,dt,words)
@@ -272,6 +285,7 @@ class TimeNode:
                 child.time += sample.time
                 self.count += 1
                 self.time += sample.time
+                child.tqueue.put(sample.start,sample.time)
                 self.tqueue.put(sample.start,sample.time)
                 res = child
                 break
@@ -287,6 +301,15 @@ class TimeNode:
         minutes, seconds = divmod(remainder, 60)
         s1 = '     ' if days<1 else "%3dd "%days
         s1 = s1+'%02d:%02d:%02d' % (hours, minutes, seconds)
+        return s1
+
+    @staticmethod
+    def fmt_delta_time_mins(time):
+        time=int(time/1000)
+        days, remainder = divmod(time,3600*24)
+        hours, remainder = divmod(remainder, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        s1 = '%02d:%02d' % (minutes, seconds)
         return s1
 
     @staticmethod
@@ -393,7 +416,7 @@ class TimeNode:
 
         nperiods = options.nperiods()
         stime=node.tqueue.sum()
-        print('%s|%s|%5d|%4.1f%%|%s' % (TimeNode.fmt_delta_time(int(node.time/nperiods)), TimeNode.fmt_delta_time(stime), node.count, percent, text))
+        print('%s|%s|%5d|%4.1f%%|%s' % (TimeNode.fmt_delta_time(int(node.time/nperiods)), TimeNode.fmt_delta_time_mins(stime), node.count, percent, text))
 
         printsample = options.printsample if options.printsample else TimeNode.printsample
         if options.samples:

@@ -70,7 +70,9 @@ class TimeLog:
         if re.search("chrom",command):
             (moreinfo,err) =  Popen(['chromix', 'url'], stdout=PIPE).communicate()
 
-        tsk = self.query.process([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000))
+        tsk = self.query.find_task([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
+
+        self.query.process([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
         self.logtask(tsk)
         logstring = "%s %s %s %s\n" % (TimeLog.get_current_time(), TimeLog.escape(command), TimeLog.escape(window), TimeLog.escape(moreinfo))
         if f:
@@ -96,24 +98,32 @@ class TimeLog:
         self.query.tasks.children.add(timenode.TimeNode("*OTHER*",expr=["*OTHER*"]))
         self.query.tasks.children.add(timenode.TimeNode("*AWAY*",expr=["*OTHER*"]))
 
+    @staticmethod
+    def fmt_delta_time_mins(time):
+        time=int(time/1000)
+        days, remainder = divmod(time,3600*24)
+        hours, remainder = divmod(remainder, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        s1 = '%02d:%02d' % (minutes, seconds)
+        return s1
+
+
     def logtask(self,tsk):
         fname=os.path.join(self.dir, self.curfilename)
         if not os.path.exists(fname):
             self.load_tasks()
 
-
+        print "logtask ",tsk
         self.query.sort_tasks()
-        s = self.fmt_delta_time(self.query.tasks.time)+"="
-        k=0
-        rating={}
-        for node in self.query.tasks.children:
-            ttime = node.tqueue.sum()
-            alltime = self.query.tasks.tqueue.period#self.query.tasks.time
-            pct = 0. if self.query.tasks.time==0. else 100. * ttime/alltime
-            rating[pct]="%2d%%%s|" % (pct,node.tag)
-
-        for k in sorted(rating,rating.get,rating.get,True):
-            if k>0: s=s+" "+rating[k]
+        s="["+(tsk.tag if tsk else "n/a")+"]:"
+        n=0
+        for t in sorted(self.query.tasks.children,key=lambda t:t.tqueue.sum(),reverse=True):
+            if t.time>0 and t.tag!="*OTHER*":
+                pct = 100*t.time/self.query.tasks.tqueue.sum()
+                s=s+"%2.0f%%%s:" %(pct,t.tag)
+                n+=1
+                if n>=3:
+                    break
 
         if len(s)>0:
             print "SNAPSHOT: "+s
@@ -122,7 +132,7 @@ class TimeLog:
             f.close();
 
     def monitor_active_window(self):
-        max_idle_timeout = 3
+        max_idle_timeout = 15
         self.cur_idle = False
         lastwindow = None
         i = 0
@@ -140,10 +150,6 @@ class TimeLog:
                         self.logtime("<idle>", "idle for %d"%max_idle_timeout )
                     else:
                         self.logtime()
-                i=i+1
-                if i>10:
-                    self.logtask(None)
-                    i=0
                 time.sleep(1)
 
         except KeyboardInterrupt:

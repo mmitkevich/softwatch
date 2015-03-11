@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('-f', "--file", help="log file mask", type=str)
     parser.add_argument("-t", "--tree", help="max depth of tree (default 1000), 0 for rating", type=int, default=1000)
     parser.add_argument("-s", "--samples", help="show samples",action="store_true")
-    parser.add_argument("-d", "--duration", help="hide items with total duration less than d minutes (default )", type=float, default=0)
+    parser.add_argument("-d", "--duration", help="hide items with total duration less than d minutes (default )", type=float, default=5)
     parser.add_argument("-m", "--percent", help="hide items with total duration less than dp percent (default 0)", type=float, default=0)
     parser.add_argument("-b", "--begin", help="begin p days ago", type=float)
     parser.add_argument("-e", "--end", help="end e days ago", type=float)
@@ -50,10 +50,10 @@ if __name__ == '__main__':
         logfiles = sorted(logfiles)
         for f in logfiles:
             if (os.path.getmtime(f)*1000-opts.min_start>=0):
-                print "processing "+f
+#                print "processing "+f
                 opts.process_file(f)
-            else:
-                print "skipped "+f
+#            else:
+#                print "skipped "+f
         taglist = args.pattern #[0].split(' ')
         opts.total.query(set(taglist),opts)
         exit(0)
