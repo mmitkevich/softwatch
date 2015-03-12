@@ -59,7 +59,7 @@ class TimeQuery:
         self.pidle = 0
         self.relative = False
         self.away_timeout=15*60*1000 # 15min max work per single program. rest time is 'away'
-        self.min_idle_minutes=60*1000 # if idle less than this->ignore idling
+        self.min_idle_minutes=5*60*1000 # if idle less than this->ignore idling
 
 
     def nperiods(self):
@@ -347,30 +347,44 @@ class TimeNode:
               self.checkremove(next.tag, tagset)
 
         skip = False
-        if len(tagset)==0 and options.tree>0:
-            if  (next.time>=options.min_time*options.nperiods()):
-                printnode(next, pathstr,options, orig_parent)
+        predicate = lambda next:(next.time>=options.min_time*options.nperiods()) and 100*next.time>=options.total.time*options.min_percent
+        def skip(next,par):
+                        if par.tag=="*ONLINE*":
+                                options.other.time=options.other.time+next.time
+                                options.other.count=options.other.count+next.count
+                                #printnode(next, "SKIP:"+pathstr,options, orig_parent)
+
+        if len(tagset)==0:
+            if  predicate(next):
+                if options.tree>0:
+                    printnode(next, pathstr,options, orig_parent)
+                limit = options.limit
+                p = next if options.tree>0 else options.total
+                #explained = 0.
+                #if len(pathstr)==0:
+                #    print "empty"
+                clone = TimeNode(pathstr, None, next.time,next.count,None)
+                for child in next.children:
+                    #explained=explained + 100.*child.time/p.time
+                    if (options.tree==0 or indent<options.tree):# and (100.*child.time/options.total.time>options.min_percent):
+                        if predicate(child):
+                            child.query(tagset, options, indent+1,next)
+                            limit-=1
+                            clone.time-=child.time
+                            clone.count-=child.count
+                        else:
+                            if options.tree>0:
+                                skip(child,orig_parent)
+
+                if options.tree==0:
+                    if predicate(clone) and len(clone.tag)>0:
+                        options.rating.children.add(clone)
+                    else:
+                        skip(clone,options.total)
             else:
-                #printnode(next, "SKIP:"+pathstr,options, orig_parent)
-                if orig_parent.tag=="*ONLINE*":
-                    options.other.time=options.other.time+next.time
-                    options.other.count=options.other.count+next.count
-                skip=True
+                skip(next,orig_parent)
 
-        if not skip:
-            limit = options.limit
-            p = next if options.tree>0 else options.total
-            explained = 0.
 
-            for child in next.children:
-              #explained=explained + 100.*child.time/p.time
-              if (options.tree==0 or indent<options.tree):# and (100.*child.time/options.total.time>options.min_percent):
-                child.query(tagset, options, indent+1,next)
-                limit-=1
-
-            #if len(tagset)==0  and options.tree==0 and limit==options.limit:
-            if len(tagset)==0  and options.tree==0 and (next.time>options.min_time*option.nperiods())  and limit==options.limit:
-               options.rating.children.add(TimeNode(pathstr, None, next.time,next.count,next.tqueue))
 
         if indent==0:
             explained = 0
@@ -416,7 +430,13 @@ class TimeNode:
 
         nperiods = options.nperiods()
         stime=node.tqueue.sum()
-        print('%s|%s|%5d|%4.1f%%|%s' % (TimeNode.fmt_delta_time(int(node.time/nperiods)), TimeNode.fmt_delta_time_mins(stime), node.count, percent, text))
+        if node.parent and node.parent.parent:
+            spercent = " %4.1f%%"%percent
+        elif node.parent:
+            spercent="%4.1f%% "%percent
+        else:
+            spercent="%4.1f%%"%percent
+        print('%s|%s|%5d|%s|%s' % (TimeNode.fmt_delta_time(int(node.time/nperiods)), TimeNode.fmt_delta_time_mins(stime), node.count, spercent, text))
 
         printsample = options.printsample if options.printsample else TimeNode.printsample
         if options.samples:
