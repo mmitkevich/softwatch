@@ -78,7 +78,8 @@ python softwatch.py report -b1 -m1 -t0
 
 ## Status file
 
-``` cat ~/.mytime/active
+``` 
+cat ~/.mytime/active
 [mytime]:67%mytime: 1%BTC: 
 ```
 
