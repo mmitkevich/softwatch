@@ -31,6 +31,7 @@ Examples:
 - show today report (only 5%+ items)
 ```
 mike@bukake:~/github/softwatch$ mytime report -b1 -m5
+      total hh:mm:ss  |last-hour hh:mm|count|percent|keywords
      09:22:59|36:21|  781|100.0%|*ONLINE*
      04:42:00|33:27|  200|50.1% |-softwatch
      04:41:56|33:27|  197| 50.1%|--github
@@ -71,6 +72,21 @@ If -m switch is ommitted, report will become quite huge containing all your keyw
 ```python softwatch.py report -b1 -m1 -t0
 
 ```
+
+Status file
+
+~/.mytime/active file  contains line like
+```
+[mytime]:67%mytime: 1%BTC: 
+```
+
+the format is
+
+```
+[CURRENT-TASK]:NN% TASK1: MM% TASK2:....
+```
+
+This percents are tracked using last 1 hour data. So you can check using this file, how much time you spend on which task during last hour.
 
 
 This is experimental (pre-alpha) software. Use on your own risk.
