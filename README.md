@@ -16,19 +16,20 @@ To analyze logs use the following command
 
 ```
 python softwath.py report [-bN] [-eN] [-tN] [-mN] [-dN]
-```
+
 
 Switches:
--bN:  do not analyze files with age more than N days. Default: use all data
--eN:  do not analyze files with age less than N days. Default: use all data
--tN:  show tree of N maximum levels. If not specified, full tree is shown. -t0 means flat 'digest' mode. 
--dN:  show only items with duration more than N minutes. Default is 0
--mN:  show only items with duration more than N percent of  total time. Default is 0
--r:   scale time so the time is relative to 5 working days week (So you should see 8hrs per day if you work 5/7). Default is OFF
+ -bN:  do not analyze files with age more than N days. Default: use all data
+ -eN:  do not analyze files with age less than N days. Default: use all data
+ -tN:  show tree of N maximum levels. If not specified, full tree is shown. -t0 means flat 'digest' mode. 
+ -dN:  show only items with duration more than N minutes. Default is 0
+ -mN:  show only items with duration more than N percent of  total time. Default is 0
+ -r:   scale time so the time is relative to 5 working days week (So you should see 8hrs per day if you work 5/7). Default is OFF
+```
 
-Examples:
+## Examples
 
-- show today report (only 5%+ items)
+### show today report (only 5%+ items)
 ```
 mike@bukake:~/github/softwatch$ mytime report -b1 -m5
       total hh:mm:ss  |last-hour hh:mm|count|percent|keywords
@@ -54,7 +55,9 @@ And used 4h42 mins (50.1%) of that time to develop [mytime] project (softwatch a
 The rest time 3h36 mins were spent in google-chrome
 All other activities (e.g. those which took less than 5% of total time) in total used 42.1% of my time.
 
-The bottom part shows =TASKS= 
+## Tasks
+
+The bottom part of above report shows =TASKS= 
 
 Each task is defined in ~/.mytime/tasks.cat file. Here is example
 ````
@@ -67,27 +70,24 @@ mytime == softwatch
 
 If -m switch is ommitted, report will become quite huge containing all your keywords combination as tree.
 
-- show today hotspots
-
-```python softwatch.py report -b1 -m1 -t0
+## show today hotspots (-t0)
 
 ```
-
-Status file
-
-~/.mytime/active file  contains line like
+python softwatch.py report -b1 -m1 -t0
 ```
+
+## Status file
+
+``` cat ~/.mytime/active
 [mytime]:67%mytime: 1%BTC: 
 ```
 
 the format is
-
 ```
 [CURRENT-TASK]:NN% TASK1: MM% TASK2:....
 ```
 
 This percents are tracked using last 1 hour data. So you can check using this file, how much time you spend on which task during last hour.
-
 
 This is experimental (pre-alpha) software. Use on your own risk.
 
