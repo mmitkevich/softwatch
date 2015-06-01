@@ -17,7 +17,7 @@ class TimeLog:
         self.load_tasks()
 
 #33    #Taken from: http://stackoverflow.com/questions/3983946/get-active-window-title-in-x
-    def get_active_window(self):
+    def get_active_window_x11(self):
         (id_w, err) = Popen(['xdotool', 'getwindowfocus'], stdout=PIPE).communicate()
 
         pid = 0
@@ -30,6 +30,20 @@ class TimeLog:
             if res: pid=res.rstrip();
 
         return (pid, name)
+
+    def get_active_window_win(self):
+        from win32gui import GetWindowText, GetForegroundWindow
+        from win32process import GetWindowThreadProcessId
+        foregroundWnd = GetForegroundWindow()
+        tid, pid= GetWindowThreadProcessId(hwnd)
+        capt = GetWindowText(foregroundWnd)
+        return (pid, capt)
+
+    def get_active_window(self):
+        if os.name=='nt':
+            return self.get_active_window_win()
+        else:
+            return self.get_active_window_x11()
 
     def get_process_command_from_id(self, processid):
         if processid == 0:
@@ -71,15 +85,14 @@ class TimeLog:
             (moreinfo,err) =  Popen(['chromix', 'url'], stdout=PIPE).communicate()
 
         tsk = self.query.find_task([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
-
         self.query.process([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
         self.logtask(tsk)
-        logstring = "%s %s %s %s\n" % (TimeLog.get_current_time(), TimeLog.escape(command), TimeLog.escape(window), TimeLog.escape(moreinfo))
+        logstring = u"{} {} {} {}\n".format(TimeLog.get_current_time(), TimeLog.escape(command), TimeLog.escape(unicode(window,'utf-8')), TimeLog.escape(moreinfo))
         if f:
-            f.write(logstring)
+            f.write(logstring.encode('utf-8'))
             f.flush()
             f.close()
-        print logstring+"-->"+(tsk.tag if tsk else "n/a")
+        print u"{}->{}".format(logstring,tsk.tag if tsk else u"n/a")
 
     @staticmethod
     def fmt_delta_time(time):
@@ -131,6 +144,13 @@ class TimeLog:
             f.write(s)
             f.close();
 
+    def get_idle_time(self):
+        if os.name == 'nt':
+            from win32gui import GetLastInputInfo
+            t = GetLastInputInfo()
+            return t
+        else:
+            return actmon.get_idle_time()
     def monitor_active_window(self):
         max_idle_timeout = 15
         self.cur_idle = False

@@ -94,13 +94,17 @@ class TimeQuery:
         return TimeSample(start, time, taglist)
 
     def find_task(self, items, time, keeptime = 0):
-        awords = re.compile('[ /:?&|=\\,@#\]\[\(\)]+').split((items[2]+" "+items[3]).lower())
-        words = filter(lambda w: re.compile('[a-zA-Z]').search(w),awords)
+        ss = unicode(items[2],'utf-8')+unicode(" "+items[3],'utf-8')
+        ss = ss.lower()
+        awords = re.compile(u'[ /:?&|=\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
+        words = filter(lambda w: re.compile(u'[\w]',re.UNICODE).search(w),awords)
+        print "words:"+unicode(words)
         for child in self.tasks.children:
             if child.match(words):
                 return child
         if items[2].startswith("idle"):
             return self.away
+        print "unclassified task"
         return None
 
     def process(self, items, time, keeptime = 0):
@@ -121,8 +125,13 @@ class TimeQuery:
                     if tidle<self.min_idle_minutes*1000:
                         return None
 
-            awords = re.compile('[ /:?&|=\\,@#\]\[\(\)]+').split((self.pitems[2]+" "+self.pitems[3]).lower())
-            words = filter(lambda w: re.compile('[a-zA-Z]').search(w),awords)
+            #awords = re.compile(u'[ /:?&|=\\,@#\]\[\(\)]+').split((self.pitems[2]+" "+self.pitems[3]).lower())
+            #words = filter(lambda w: re.compile('[a-zA-Z]').search(w),awords)
+            ss = (unicode(self.pitems[2],'utf-8')+u" "+unicode(self.pitems[3],'utf-8')).lower()
+            awords = re.compile(u'[ /:?&|=\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
+            words = filter(lambda w: re.compile(u'[\w]',re.UNICODE).search(w),awords)
+
+
             #if len(awords)!=len(words):
             #    print "1"
             dt = time-self.ptime
@@ -317,10 +326,11 @@ class TimeNode:
         #return time.ctime(int(start/1000))
         return time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(int(start/1000)))
 
-    def checkremove(self,tag,tagfilters):
+    def checkremove(self,tag,tagfilters,and_remove=True):
         for filt in tagfilters:
             if re.compile(filt).search(tag):
-                tagfilters.remove(filt)
+                if and_remove:
+                    tagfilters.remove(filt)
                 return True
         return False
 
@@ -354,35 +364,36 @@ class TimeNode:
                                 options.other.count=options.other.count+next.count
                                 #printnode(next, "SKIP:"+pathstr,options, orig_parent)
 
-        if len(tagset)==0:
-            if  predicate(next):
-                if options.tree>0:
-                    printnode(next, pathstr,options, orig_parent)
-                limit = options.limit
-                p = next if options.tree>0 else options.total
-                #explained = 0.
-                #if len(pathstr)==0:
-                #    print "empty"
-                clone = TimeNode(pathstr, None, next.time,next.count,None)
-                for child in next.children:
-                    #explained=explained + 100.*child.time/p.time
-                    if (options.tree==0 or indent<options.tree):# and (100.*child.time/options.total.time>options.min_percent):
-                        if predicate(child):
-                            child.query(tagset, options, indent+1,next)
-                            limit-=1
-                            clone.time-=child.time
-                            clone.count-=child.count
-                        else:
-                            if options.tree>0:
-                                skip(child,orig_parent)
 
-                if options.tree==0:
-                    if predicate(clone) and len(clone.tag)>0:
-                        options.rating.children.add(clone)
+        if  predicate(next):
+            if options.tree>0:
+                if len(tagset)==0:
+                    printnode(next, pathstr,options, orig_parent)
+            limit = options.limit
+            p = next if options.tree>0 else options.total
+            #explained = 0.
+            #if len(pathstr)==0:
+            #    print "empty"
+            clone = TimeNode(pathstr, None, next.time,next.count,None)
+            for child in next.children:
+                #explained=explained + 100.*child.time/p.time
+                if (options.tree==0 or indent<options.tree):# and (100.*child.time/options.total.time>options.min_percent):
+                    if predicate(child):
+                        child.query(tagset, options, indent+1,next)
+                        limit-=1
+                        clone.time-=child.time
+                        clone.count-=child.count
                     else:
-                        skip(clone,options.total)
-            else:
-                skip(next,orig_parent)
+                        if options.tree>0:
+                            skip(child,orig_parent)
+
+            if options.tree==0:
+                if predicate(clone) and len(clone.tag)>0 and len(tagset)==0:
+                    options.rating.children.add(clone)
+                else:
+                    skip(clone,options.total)
+        else:
+            skip(next,orig_parent)
 
 
 
@@ -451,15 +462,17 @@ def loadTasks(in_file):
         file = open(in_file,'r')
 
         for line in file.readlines():
+            #print line
             if line[0]=='#':
                 continue
-            kv = line.split('==')
+            kv = unicode(line,'utf-8').strip().split(u'==')
             if len(kv)<2:
                 print "invalid category:\n"+line
                 continue
-            tag = kv[0].strip();
-            tn = TimeNode(tag)
-            tn.expr = [[y.strip() for y in x.split(' ') if len(y.strip())>0] for x in kv[1].split('||')]
+            tag = kv[0].strip()
+            tn = TimeNode(unicode(tag))
+            tn.expr = [[y.strip() for y in x.split(u' ') if len(y.strip())>0] for x in kv[1].split(u'||')]
+            #print "load tag "+unicode(tn.expr)
             tasks.children.add(tn)
         file.close()
     except BaseException as e:
