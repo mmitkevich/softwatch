@@ -53,4 +53,5 @@ def run(args):
       f=open("err","w")
       f.write(str(e)+"\n"+var)
       f.close()
+      print var
       return 1

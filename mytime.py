@@ -24,5 +24,6 @@ if __name__ == '__main__':
     parser.add_argument("-e", "--end", help="end e days ago", type=float)
     parser.add_argument("-r", "--relative", help="show time relative to 24h period", action="store_true")
     args = parser.parse_args()
+    args.systray=None
     run(args)
     exit(0)

@@ -115,7 +115,7 @@ class TimeLog:
         tsk = self.query.find_task([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
         self.query.process([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
         self.logtask(tsk)
-        logstring = u"{} {} {} {}\n".format(TimeLog.get_current_time(), TimeLog.escape(command), TimeLog.escape(unicode(window,'utf-8')), TimeLog.escape(moreinfo))
+        logstring = u"{} {} {} {}\n".format(TimeLog.get_current_time(), TimeLog.escape(command), TimeLog.escape(unicode(window,'cp1251' if os.name=='nt' else 'utf-8')), TimeLog.escape(moreinfo))
         if f:
             f.write(logstring.encode('utf-8'))
             f.flush()

@@ -8,6 +8,7 @@ import re
 import traceback
 import math
 from collections import deque
+import os
 
 class TimeQueue:
     def __init__(self,period):
@@ -96,7 +97,8 @@ class TimeQuery:
         return TimeSample(start, time, taglist)
 
     def find_task(self, items, time, keeptime = 0):
-        ss = unicode(items[2],'utf-8')+unicode(" "+items[3],'utf-8')
+        enco = 'cp1251' if os.name=='nt' else 'utf-8'
+        ss = unicode(items[2],enco)+unicode(" "+items[3],enco)
         ss = ss.lower()
         awords = re.compile(u'[ /:?&|=\\\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
         words = filter(lambda w: re.compile(u'[\w]',re.UNICODE).search(w),awords)
