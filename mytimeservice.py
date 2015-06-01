@@ -34,7 +34,7 @@ class MyTimeSvc (win32serviceutil.ServiceFramework):
  	
     def main(self):
     	dir = r"C:\Users\Administrator"
-        f=open(dir+"\.mytime\svc.log","a")
+        f=open(dir+"\.mytime\svc.log.txt","a")
         try:
          f.write("starting in dir "+dir)
          f.flush()

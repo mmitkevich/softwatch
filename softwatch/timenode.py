@@ -84,6 +84,7 @@ class TimeQuery:
                     continue
                 if time>=self.max_start:
                     break
+                items = [unicode(i,'utf-8') for i in items]
                 self.process(items,time, 1000000000)
 
             except BaseException as e:
@@ -98,8 +99,7 @@ class TimeQuery:
         return TimeSample(start, time, taglist)
 
     def find_task(self, items, time, keeptime = 0):
-        enco = 'cp1251' if os.name=='nt' else 'utf-8'
-        ss = unicode(items[2],enco)+unicode(" "+items[3],enco)
+        ss = items[2]+u" "+items[3]
         ss = ss.lower()
         awords = re.compile(u'[ /:?&|=\\\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
         words = filter(lambda w: re.compile(u'[\w]',re.UNICODE).search(w),awords)
@@ -133,7 +133,7 @@ class TimeQuery:
             #awords = re.compile(u'[ /:?&|=\\,@#\]\[\(\)]+').split((self.pitems[2]+" "+self.pitems[3]).lower())
             #words = filter(lambda w: re.compile('[a-zA-Z]').search(w),awords)
             #enco = 'cp1251' if os.name=='nt' else 'utf-8'
-            ss = (unicode(self.pitems[2],'utf-8')+u" "+unicode(self.pitems[3],'utf-8')).lower()
+            ss = (self.pitems[2]+u" "+self.pitems[3]).lower()
             awords = re.compile(u'[ /:?&|=\\\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
             words = filter(lambda w: re.compile(u'[\w]',re.UNICODE).search(w),awords)
 

@@ -225,11 +225,13 @@ def non_string_iterable(obj):
 # directory in order for this to work...
 if __name__ == '__main__':
     import itertools, glob
-    sys.stdout = open(r"mylog.txt", "w")
     sys.stdin = os.devnull
     MyArgs = collections.namedtuple('MyArgs', 'action dir systray')
     dir = os.path.expanduser(os.path.join("~",".mytime"))
-   
+    logpath=os.path.join(dir,r"mytime.log.txt")
+    sys.stdout = open(logpath, "w")
+    sys.stderr = open(logpath, "w")
+
     icons = itertools.cycle(glob.glob('*.ico'))
     hover_text = "mytime"
 #    def hello(sysTrayIcon): print "Hello World."

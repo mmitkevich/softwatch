@@ -19,14 +19,19 @@ def run(args):
     #sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout);
     if sys.platform == "win32":
         class UniStream(object):
-            __slots__= ("fileno", "softspace",)
+            __slots__= ("fobj", "softspace",)
 
             def __init__(self, fileobject):
-                self.fileno = fileobject.fileno()
+                self.fobj = fileobject
+                #self.fileno = fileobject.fileno()
                 self.softspace = False
 
             def write(self, text):
-                os.write(self.fileno, text.encode("cp866") if isinstance(text, unicode) else text)
+                try:
+                    fno = self.fobj.fileno()
+                    os.write(fno, text.encode("cp866") if isinstance(text, unicode) else text)
+                except:
+                    fobj.write(text)
 
         sys.stdout = UniStream(sys.stdout)
         sys.stderr = UniStream(sys.stderr)
