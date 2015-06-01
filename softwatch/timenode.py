@@ -49,7 +49,7 @@ class TimeQuery:
         self.printsample = None
         self.other = TimeNode("*OTHER*")
         self.min_start = 0
-        self.max_start = sys.maxint
+        self.max_start = 0x1000000000000
         self.cats = None
         self.away = TimeNode("*AWAY*")
         self.total = TimeNode('*ONLINE*')
@@ -74,8 +74,10 @@ class TimeQuery:
 
         for line in file.readlines():
             try:
+#            	print line
                 items = shlex.split(line)
                 time = int(items[0])
+#                print time,self.min_start,self.max_start
                 if time<self.min_start:
                     continue
                 if time>=self.max_start:
@@ -96,7 +98,7 @@ class TimeQuery:
     def find_task(self, items, time, keeptime = 0):
         ss = unicode(items[2],'utf-8')+unicode(" "+items[3],'utf-8')
         ss = ss.lower()
-        awords = re.compile(u'[ /:?&|=\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
+        awords = re.compile(u'[ /:?&|=\\\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
         words = filter(lambda w: re.compile(u'[\w]',re.UNICODE).search(w),awords)
         print "words:"+unicode(words)
         for child in self.tasks.children:
@@ -128,7 +130,7 @@ class TimeQuery:
             #awords = re.compile(u'[ /:?&|=\\,@#\]\[\(\)]+').split((self.pitems[2]+" "+self.pitems[3]).lower())
             #words = filter(lambda w: re.compile('[a-zA-Z]').search(w),awords)
             ss = (unicode(self.pitems[2],'utf-8')+u" "+unicode(self.pitems[3],'utf-8')).lower()
-            awords = re.compile(u'[ /:?&|=\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
+            awords = re.compile(u'[ /:?&|=\\\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
             words = filter(lambda w: re.compile(u'[\w]',re.UNICODE).search(w),awords)
 
 

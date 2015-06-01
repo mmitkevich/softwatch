@@ -1,10 +1,9 @@
-import actmon
 import time
 import os
 from subprocess import Popen, PIPE
 import re
 import timenode
-
+import subprocess
 
 
 class TimeLog:
@@ -34,9 +33,9 @@ class TimeLog:
     def get_active_window_win(self):
         from win32gui import GetWindowText, GetForegroundWindow
         from win32process import GetWindowThreadProcessId
-        foregroundWnd = GetForegroundWindow()
+        hwnd = GetForegroundWindow()
         tid, pid= GetWindowThreadProcessId(hwnd)
-        capt = GetWindowText(foregroundWnd)
+        capt = GetWindowText(hwnd)
         return (pid, capt)
 
     def get_active_window(self):
@@ -45,16 +44,39 @@ class TimeLog:
         else:
             return self.get_active_window_x11()
 
+    def get_process_command_from_pid_win32(self, processid):
+       cmd = 'tasklist /fi "pid eq '+str(processid)+'" /fo csv'
+       print cmd
+       # execute the command
+       proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+       lines = proc.stdout.readlines()
+       if len(lines)>1:
+          line = lines[1]
+          print line
+          items=line.split(",")
+          if len(items)>=2:
+   	   	    pname = items[0][1:-1]
+   	   	    print "PNAME="+pname
+   	   	    return pname
+       #cmdLine = str(line)
+       #file = cmdLine.strip().split(" ")[-1];
+       #split = file.split("\\"); #"
+       #command=split[1]    	
+       return "<unknown>"
+		
     def get_process_command_from_id(self, processid):
         if processid == 0:
             return ""
 
         command="<unknown>"
-        try:
-            command = os.readlink("/proc/%s/exe" % processid)
-        except OSError as e:
-            print e
-
+        if os.name=='nt':
+            command = self.get_process_command_from_pid_win32(processid)
+        else:
+	        try:
+	            command = os.readlink("/proc/%s/exe" % processid)
+	        except OSError as e:
+	            print e
+		print "command:"+command
         return command
 
     @staticmethod
@@ -78,11 +100,16 @@ class TimeLog:
     def logtime(self,command = None,window=None):
         command = command or self.currentcommand
         window = window or self.currentwindow
-        f = open(os.path.join(self.dir,self.logfilename), 'aF+')
+        try:os.mkdir(self.dir)
+        except:pass
+        f = open(os.path.join(self.dir,self.logfilename), 'a+')
 
         moreinfo = ""
         if re.search("chrom",command):
-            (moreinfo,err) =  Popen(['chromix', 'url'], stdout=PIPE).communicate()
+            try:
+              (moreinfo,err) =  Popen(['chromix', 'url'], stdout=PIPE).communicate()
+            except:
+            	pass
 
         tsk = self.query.find_task([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
         self.query.process([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
@@ -146,11 +173,13 @@ class TimeLog:
 
     def get_idle_time(self):
         if os.name == 'nt':
-            from win32gui import GetLastInputInfo
+            from win32api import GetLastInputInfo
             t = GetLastInputInfo()
             return t
         else:
-            return actmon.get_idle_time()
+            from actmon import get_ilde_time
+            return get_idle_time()
+            
     def monitor_active_window(self):
         max_idle_timeout = 15
         self.cur_idle = False
@@ -163,7 +192,7 @@ class TimeLog:
                     self.currentcommand = self.get_process_command_from_id(self.curpid)
                     self.logtime()
                     lastwindow = self.currentwindow
-                idle = actmon.get_idle_time() > max_idle_timeout*1000
+                idle = self.get_idle_time() > max_idle_timeout*1000
                 if idle!=self.cur_idle:
                     self.cur_idle=idle
                     if idle:
