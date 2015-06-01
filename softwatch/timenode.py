@@ -75,6 +75,7 @@ class TimeQuery:
 
         for line in file.readlines():
             try:
+                line=line.strip()
 #            	print line
                 items = shlex.split(line)
                 time = int(items[0])
@@ -102,13 +103,13 @@ class TimeQuery:
         ss = ss.lower()
         awords = re.compile(u'[ /:?&|=\\\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
         words = filter(lambda w: re.compile(u'[\w]',re.UNICODE).search(w),awords)
-        print "words:"+unicode(words)
+        #print "words:"+unicode(words)
         for child in self.tasks.children:
             if child.match(words):
                 return child
         if items[2].startswith("idle"):
             return self.away
-        print "unclassified task"
+        #print "unclassified task"
         return None
 
     def process(self, items, time, keeptime = 0):
@@ -131,6 +132,7 @@ class TimeQuery:
 
             #awords = re.compile(u'[ /:?&|=\\,@#\]\[\(\)]+').split((self.pitems[2]+" "+self.pitems[3]).lower())
             #words = filter(lambda w: re.compile('[a-zA-Z]').search(w),awords)
+            #enco = 'cp1251' if os.name=='nt' else 'utf-8'
             ss = (unicode(self.pitems[2],'utf-8')+u" "+unicode(self.pitems[3],'utf-8')).lower()
             awords = re.compile(u'[ /:?&|=\\\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
             words = filter(lambda w: re.compile(u'[\w]',re.UNICODE).search(w),awords)
@@ -432,7 +434,7 @@ class TimeNode:
     @staticmethod
     def printnode(node, text = None, options = None, parent=None):
         if not text:
-            text = node.tag
+            text = unicode(node.tag,'utf-8')
         percent = 100.
         if options and options.total.time>0: #and 0==options.tree
             percent = 100. * node.time / (options.total.time)
@@ -451,8 +453,9 @@ class TimeNode:
             spercent="%4.1f%% "%percent
         else:
             spercent="%4.1f%%"%percent
-        print('%s|%s|%5d|%s|%s' % (TimeNode.fmt_delta_time(int(node.time/nperiods)), TimeNode.fmt_delta_time_mins(stime), node.count, spercent, text))
-
+          
+        s=u'%{}|{}|{:5d}|{}|{}' .format (TimeNode.fmt_delta_time(int(node.time/nperiods)), TimeNode.fmt_delta_time_mins(stime), node.count, spercent, text)
+        print(s)
         printsample = options.printsample if options.printsample else TimeNode.printsample
         if options.samples:
             for samp in node.samples:

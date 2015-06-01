@@ -47,7 +47,7 @@ class TimeLog:
 
     def get_process_command_from_pid_win32(self, processid):
        cmd = 'tasklist /fi "pid eq '+str(processid)+'" /fo csv'
-       print cmd
+#       print cmd
        # execute the command
        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE,stderr=subprocess.STDOUT)
        lines = proc.stdout.readlines()
@@ -57,7 +57,7 @@ class TimeLog:
           items=line.split(",")
           if len(items)>=2:
    	   	    pname = items[0][1:-1]
-   	   	    print "PNAME="+pname
+#   	   	    print "PNAME="+pname
    	   	    return pname
        #cmdLine = str(line)
        #file = cmdLine.strip().split(" ")[-1];
@@ -120,7 +120,7 @@ class TimeLog:
             f.write(logstring.encode('utf-8'))
             f.flush()
             f.close()
-        print u"{}->{}".format(logstring,tsk.tag if tsk else u"n/a")
+        print (u"{}->{}".format(logstring,tsk.tag if tsk else u"n/a")).encode('utf-8')
 
     @staticmethod
     def fmt_delta_time(time):
@@ -167,7 +167,7 @@ class TimeLog:
                     break
 
         if len(s)>0:
-            print "SNAPSHOT: "+s
+            #print "SNAPSHOT: "+s
             f = open(fname,"wt")
             f.write(s)
             f.close();

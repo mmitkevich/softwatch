@@ -8,13 +8,29 @@ import time
 import os
 import glob
 import traceback
-
+import codecs
+import locale
 def run1(args):
 	run(args[0])
 	
 	
 def run(args):
   try:
+    #sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout);
+    if sys.platform == "win32":
+        class UniStream(object):
+            __slots__= ("fileno", "softspace",)
+
+            def __init__(self, fileobject):
+                self.fileno = fileobject.fileno()
+                self.softspace = False
+
+            def write(self, text):
+                os.write(self.fileno, text.encode("cp866") if isinstance(text, unicode) else text)
+
+        sys.stdout = UniStream(sys.stdout)
+        sys.stderr = UniStream(sys.stderr)
+
     print "run "+str(args)
     if args.action=='log':
         aw = timelog.TimeLog(args)
