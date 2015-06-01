@@ -9,8 +9,9 @@ import subprocess
 class TimeLog:
 
 
-    def __init__(self, dir, logfilename=None):
-        self.dir = dir
+    def __init__(self, args, logfilename=None):
+        self.dir = args.dir
+        self.systray = args.systray
         self.logfilename = logfilename or time.strftime("%Y-%m-%d.log")
         self.curfilename = "active"
         self.load_tasks()
@@ -48,7 +49,7 @@ class TimeLog:
        cmd = 'tasklist /fi "pid eq '+str(processid)+'" /fo csv'
        print cmd
        # execute the command
-       proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+       proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stdin=subprocess.PIPE,stderr=subprocess.STDOUT)
        lines = proc.stdout.readlines()
        if len(lines)>1:
           line = lines[1]
@@ -170,6 +171,9 @@ class TimeLog:
             f = open(fname,"wt")
             f.write(s)
             f.close();
+            if self.systray:
+                self.systray(s)
+
 
     def get_idle_time(self):
         if os.name == 'nt':

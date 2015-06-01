@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-
+import collections
 import argparse
 from softwatch import timelog
 from softwatch import timenode
@@ -7,27 +7,19 @@ import sys
 import time
 import os
 import glob
+import traceback
 
-if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('action', help='log | report | start | stop | status')
-    parser.add_argument('pattern', help="pattern+", nargs='*')
-    parser.add_argument('-D', "--dir", help="log directory", type=str, default=os.path.expanduser(os.path.join("~",".mytime")))
-    parser.add_argument('-f', "--file", help="log file mask", type=str)
-    parser.add_argument("-t", "--tree", help="max depth of tree (default 1000), 0 for rating", type=int, default=1000)
-    parser.add_argument("-s", "--samples", help="show samples",action="store_true")
-    parser.add_argument("-d", "--duration", help="hide items with total duration less than d minutes (default )", type=float, default=5)
-    parser.add_argument("-m", "--percent", help="hide items with total duration less than dp percent (default 0)", type=float, default=0)
-    parser.add_argument("-b", "--begin", help="begin p days ago", type=float)
-    parser.add_argument("-e", "--end", help="end e days ago", type=float)
-    parser.add_argument("-r", "--relative", help="show time relative to 24h period", action="store_true")
-    args = parser.parse_args()
-
+def run1(args):
+	run(args[0])
+	
+	
+def run(args):
+  try:
+    print "run "+str(args)
     if args.action=='log':
-        aw = timelog.TimeLog(args.dir)
+        aw = timelog.TimeLog(args)
         aw.monitor_active_window()
-        exit(0)
+        return 0
 
     if args.action=='report':
         args.file = args.file or "*.log"
@@ -55,10 +47,10 @@ if __name__ == '__main__':
 #                print "skipped "+f
         taglist = args.pattern #[0].split(' ')
         opts.total.query(set(taglist),opts)
-        exit(0)
-
-
-
-
-
-
+        return 0
+  except BaseException as e:
+      var = traceback.format_exc()
+      f=open("err","w")
+      f.write(str(e)+"\n"+var)
+      f.close()
+      return 1

@@ -1,4 +1,4 @@
-softwatch
+mytime
 =========
 
 Tracks and reports time spent by linux desktop user on differenet applications and tasks. 
@@ -7,7 +7,7 @@ Each caption is split into keywords set.
 
 Daemon could be started using
 ```bash
-python softwatch.py log
+python mytime.py log
 ```
 
 Logs are recorded into $HOME/.mytime/YYYY-MM-DD.log files 
@@ -15,7 +15,7 @@ Logs are recorded into $HOME/.mytime/YYYY-MM-DD.log files
 To analyze logs use the following command
 
 ```
-python softwath.py report [-bN] [-eN] [-tN] [-mN] [-dN]
+python mytime.py report [-bN] [-eN] [-tN] [-mN] [-dN]
 
 
 Switches:
@@ -95,3 +95,9 @@ This is experimental (pre-alpha) software. Use on your own risk.
 
 
 
+## Windows
+
+Logger works, place to autostart:
+```
+pythonw mytimetray.py
+```
