@@ -30,8 +30,9 @@ def run(args):
                 try:
                     fno = self.fobj.fileno()
                     os.write(fno, text.encode("cp866") if isinstance(text, unicode) else text)
-                except:
-                    fobj.write(text)
+                except BaseException as e:
+                    print traceback.format_exc()
+                    #self.fobj.write(text)
 
         sys.stdout = UniStream(sys.stdout)
         sys.stderr = UniStream(sys.stderr)
