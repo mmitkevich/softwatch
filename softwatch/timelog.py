@@ -82,12 +82,20 @@ class TimeLog:
 
         moreinfo = ""
         if re.search("chrom",command):
-            (moreinfo,err) =  Popen(['chromix', 'url'], stdout=PIPE).communicate()
-
+            (moreinfo,err) =  Popen(['chromix', 'list'], stdout=PIPE).communicate()
+            moreinfo = moreinfo
+            win2url = {}
+            for moreline in moreinfo.split('\n'):
+               moreitems = moreline.split(' ',2)
+               if len(moreitems)==3:
+                 win2url[moreitems[2]]=moreitems[1]
+            window = window.replace(' - Google Chrome','')
+            moreinfo = win2url.get(window) or ""
+            print u'W=[{}]=[{}] W2U={}'.format(window,moreinfo,win2url)
         tsk = self.query.find_task([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
         self.query.process([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
         self.logtask(tsk)
-        logstring = u"{} {} {} {}\n".format(TimeLog.get_current_time(), TimeLog.escape(command), TimeLog.escape(unicode(window,'utf-8')), TimeLog.escape(moreinfo))
+        logstring = u"{} {} {} {}\n".format(TimeLog.get_current_time(), TimeLog.escape(command), TimeLog.escape(unicode(window.replace("\n","|"),'utf-8')), TimeLog.escape(moreinfo.strip()))
         if f:
             f.write(logstring.encode('utf-8'))
             f.flush()
@@ -159,18 +167,23 @@ class TimeLog:
         try:
             while True:
                 self.curpid, self.currentwindow = self.get_active_window()
+                print "CW {}".format(self.currentwindow)
                 if self.currentwindow != lastwindow:
                     self.currentcommand = self.get_process_command_from_id(self.curpid)
                     self.logtime()
                     lastwindow = self.currentwindow
-                idle = actmon.get_idle_time() > max_idle_timeout*1000
+                idle = False
+                try:
+                    idle = actmon.get_idle_time() > max_idle_timeout*1000
+                except:
+                    pass
                 if idle!=self.cur_idle:
                     self.cur_idle=idle
                     if idle:
                         self.logtime("<idle>", "idle for %d"%max_idle_timeout )
                     else:
                         self.logtime()
-                time.sleep(1)
+                time.sleep(22)
 
         except KeyboardInterrupt:
             TimeLog.logtime('#SIGTERM', 'TimeLog terminated')

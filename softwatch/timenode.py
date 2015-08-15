@@ -127,7 +127,7 @@ class TimeQuery:
 
             #awords = re.compile(u'[ /:?&|=\\,@#\]\[\(\)]+').split((self.pitems[2]+" "+self.pitems[3]).lower())
             #words = filter(lambda w: re.compile('[a-zA-Z]').search(w),awords)
-            ss = (unicode(self.pitems[2],'utf-8')+u" "+unicode(self.pitems[3],'utf-8')).lower()
+            ss = (unicode(self.pitems[2],'utf-8')+u" "+unicode(self.pitems[3].replace('/',' '),'utf-8')).lower()
             awords = re.compile(u'[ /:?&|=\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
             words = filter(lambda w: re.compile(u'[\w]',re.UNICODE).search(w),awords)
 
