@@ -118,12 +118,12 @@ class TimeLog:
             moreinfo = win2url.get(window) or ""
             print u'W=[{}]=[{}] W2U={}'.format(window,moreinfo,win2url)
 
-        window = unicode(window,'cp1251' if os.name=='nt' else 'utf-8')
+        window = unicode(window,'cp1251' if os.name=='nt' else 'utf-8').encode('utf-8')
 
         tsk = self.query.find_task([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
         self.query.process([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
         self.logtask(tsk)
-        logstring = u"{} {} {} {}\n".format(TimeLog.get_current_time(), TimeLog.escape(command), TimeLog.escape(unicode(window.replace("\n","|"),'utf-8')), TimeLog.escape(moreinfo.strip()))
+        logstring = u"{} {} {} {}\n".format(TimeLog.get_current_time(), TimeLog.escape(command), TimeLog.escape(window.replace("\n","|")), TimeLog.escape(moreinfo.strip()))
         if f:
             f.write(logstring.encode('utf-8'))
             f.flush()
@@ -216,7 +216,7 @@ class TimeLog:
                         self.logtime("<idle>", "idle for %d"%max_idle_timeout )
                     else:
                         self.logtime()
-                time.sleep(22)
+                time.sleep(2)
 
         except KeyboardInterrupt:
             TimeLog.logtime('#SIGTERM', 'TimeLog terminated')
