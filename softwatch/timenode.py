@@ -2,7 +2,7 @@
 import sys
 import re
 import time
-import shlex
+import ushlex as shlex
 from sortedcontainers import SortedSet
 import re
 import traceback
@@ -70,26 +70,27 @@ class TimeQuery:
 
     def process_file(self, in_file):
         self.iline = 0
-        file = open(in_file,'r')
+        file = open(in_file,'rt')
 
 
         for line in file.readlines():
             try:
                 line=line.strip()
 #            	print line
-                items = shlex.split(line)
+                items = shlex.split(unicode(line, 'utf-8'))
                 time = int(items[0])
 #                print time,self.min_start,self.max_start
                 if time<self.min_start:
                     continue
                 if time>=self.max_start:
                     break
-                items = [unicode(i,'utf-8') for i in items]
+                items = [i.encode('utf-8') for i in items]
+                print u'processing ' + u'|'.join([unicode(i,'utf-8') for i in items])
                 self.process(items,time, 1000000000)
 
             except BaseException as e:
                 print("%s(%d): syntax error %s "%(in_file,self.iline,e))
-                traceback.print_exc(e,sys.stdout)
+                traceback.print_exc()
 #               raise Error(e)
 
     @staticmethod
@@ -99,10 +100,10 @@ class TimeQuery:
         return TimeSample(start, time, taglist)
 
     def find_task(self, items, time, keeptime = 0):
-        ss = items[2]+u" "+items[3]
+        ss = items[2]+" "+items[3]
         ss = ss.lower()
-        awords = re.compile(u'[ /:?&|=\\\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
-        words = filter(lambda w: re.compile(u'[\w]',re.UNICODE).search(w),awords)
+        awords = re.compile('[ /:?&|=\\\\,@#\]\[\(\)]+').split(ss)
+        words = filter(lambda w: re.compile('[\w]').search(w),awords)
         #print "words:"+unicode(words)
         for child in self.tasks.children:
             if child.match(words):
@@ -132,9 +133,9 @@ class TimeQuery:
 
             #awords = re.compile(u'[ /:?&|=\\,@#\]\[\(\)]+').split((self.pitems[2]+" "+self.pitems[3]).lower())
             #words = filter(lambda w: re.compile('[a-zA-Z]').search(w),awords)
-            ss = (self.pitems[2]+" "+self.pitems[3].replace('/',' ')).lower()
-            awords = re.compile(u'[ /:?&|=\\,@#\]\[\(\)]+',re.UNICODE).split(ss)
-            words = filter(lambda w: re.compile(u'[\w]',re.UNICODE).search(w),awords)
+            ss = (self.pitems[2]+" "+self.pitems[3].replace('/',' '))
+            awords = re.compile('[ /:?&|=\\,@#\]\[\(\)]+').split(ss)
+            words = [ unicode(w,'utf-8').lower().encode('utf-8') for w in awords if re.compile('[\w]',re.UNICODE).search(unicode(w, 'utf-8'))]
 
 
             #if len(awords)!=len(words):
@@ -434,6 +435,8 @@ class TimeNode:
     def printnode(node, text = None, options = None, parent=None):
         if not text:
             text = unicode(node.tag,'utf-8')
+        elif not isinstance(text,unicode):
+            text = unicode(text,'utf-8')
         percent = 100.
         if options and options.total.time>0: #and 0==options.tree
             percent = 100. * node.time / (options.total.time)
@@ -453,7 +456,7 @@ class TimeNode:
         else:
             spercent="%4.1f%%"%percent
 
-        s=u'%{}|{}|{:5d}|{}|{}' .format (TimeNode.fmt_delta_time(int(node.time/nperiods)), TimeNode.fmt_delta_time_mins(stime), node.count, spercent, text)
+        s=u'{}|{}|{:5d}|{}|{}' .format (TimeNode.fmt_delta_time(int(node.time/nperiods)), TimeNode.fmt_delta_time_mins(stime), node.count, spercent, text)
         print(s)
         printsample = options.printsample if options.printsample else TimeNode.printsample
         if options.samples:
@@ -471,16 +474,17 @@ def loadTasks(in_file):
             #print line
             if line[0]=='#':
                 continue
-            kv = unicode(line,'utf-8').strip().split(u'==')
+            kv = line.strip().split('==')
             if len(kv)<2:
-                print "invalid category:\n"+line
+                print "invalid category:(%s)"%line
                 continue
             tag = kv[0].strip()
             tn = TimeNode(unicode(tag))
-            tn.expr = [[y.strip() for y in x.split(u' ') if len(y.strip())>0] for x in kv[1].split(u'||')]
+            tn.expr = [[y.strip() for y in x.split(' ') if len(y.strip())>0] for x in kv[1].split('||')]
             #print "load tag "+unicode(tn.expr)
             tasks.children.add(tn)
         file.close()
     except BaseException as e:
+        traceback.print_exc()
         print("failed to load tasks: %s"%(e))
     return tasks

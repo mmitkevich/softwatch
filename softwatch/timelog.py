@@ -116,19 +116,19 @@ class TimeLog:
                  win2url[moreitems[2]]=moreitems[1]
             window = window.replace(' - Google Chrome','')
             moreinfo = win2url.get(window) or ""
-            print u'W=[{}]=[{}] W2U={}'.format(window,moreinfo,win2url)
+            #print u'W=[{}]=[{}] W2U={}'.format(window,moreinfo,win2url)
 
         window = unicode(window,'cp1251' if os.name=='nt' else 'utf-8').encode('utf-8')
 
         tsk = self.query.find_task([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
         self.query.process([TimeLog.get_current_time(),command,window,moreinfo],int(time.time() * 1000),10000000)
         self.logtask(tsk)
-        logstring = u"{} {} {} {}\n".format(TimeLog.get_current_time(), TimeLog.escape(command), TimeLog.escape(window.replace("\n","|")), TimeLog.escape(moreinfo.strip()))
+        logstring = "{} {} {} {}\n".format(TimeLog.get_current_time(), TimeLog.escape(command), TimeLog.escape(window.replace("\n","|")), TimeLog.escape(moreinfo.strip()))
         if f:
-            f.write(logstring.encode('utf-8'))
+            f.write(logstring)
             f.flush()
             f.close()
-        print (u"{}->{}".format(logstring,tsk.tag if tsk else u"n/a")).encode('utf-8')
+        print ("{}->{}".format(logstring,tsk.tag if tsk else "n/a"))
 
     @staticmethod
     def fmt_delta_time(time):

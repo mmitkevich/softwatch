@@ -44,6 +44,7 @@ class MyTimeSvc (win32serviceutil.ServiceFramework):
          f.flush()
          sys.exit(0)
         except BaseException as e:
+         traceback.print_exc()
          print e
          f.write(str(e))
         f.close()

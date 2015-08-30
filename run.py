@@ -12,8 +12,8 @@ import codecs
 import locale
 def run1(args):
 	run(args[0])
-	
-	
+
+
 def run(args):
   try:
     #sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout);
@@ -31,7 +31,7 @@ def run(args):
                     fno = self.fobj.fileno()
                     os.write(fno, text.encode("cp866") if isinstance(text, unicode) else text)
                 except BaseException as e:
-                    print traceback.format_exc()
+                    traceback.print_exc()
                     #self.fobj.write(text)
 
         sys.stdout = UniStream(sys.stdout)
@@ -68,9 +68,11 @@ def run(args):
 #            else:
 #                print "skipped "+f
         taglist = args.pattern #[0].split(' ')
+        print taglist
         opts.total.query(set(taglist),opts)
         return 0
   except BaseException as e:
+      taceback.print_exc()
       var = traceback.format_exc()
       f=open("err","w")
       f.write(str(e)+"\n"+var)
