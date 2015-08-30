@@ -72,7 +72,7 @@ def run(args):
         opts.total.query(set(taglist),opts)
         return 0
   except BaseException as e:
-      taceback.print_exc()
+      traceback.print_exc()
       var = traceback.format_exc()
       f=open("err","w")
       f.write(str(e)+"\n"+var)

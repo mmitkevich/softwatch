@@ -114,7 +114,7 @@ class TimeLog:
                moreitems = moreline.split(' ',2)
                if len(moreitems)==3:
                  win2url[moreitems[2]]=moreitems[1]
-            window = window.replace(' - Google Chrome','')
+            window = window.replace(' - Google Chrome','').replace(' - Chromium','')
             moreinfo = win2url.get(window) or ""
             #print u'W=[{}]=[{}] W2U={}'.format(window,moreinfo,win2url)
 

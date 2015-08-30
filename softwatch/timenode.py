@@ -71,13 +71,16 @@ class TimeQuery:
     def process_file(self, in_file):
         self.iline = 0
         file = open(in_file,'rt')
-
+        self.nerrs = 0
 
         for line in file.readlines():
             try:
                 line=line.strip()
 #            	print line
                 items = shlex.split(unicode(line, 'utf-8'))
+                if len(items)<1:
+                    self.nerrs +=1
+                    continue
                 time = int(items[0])
 #                print time,self.min_start,self.max_start
                 if time<self.min_start:
@@ -85,14 +88,15 @@ class TimeQuery:
                 if time>=self.max_start:
                     break
                 items = [i.encode('utf-8') for i in items]
-                print u'processing ' + u'|'.join([unicode(i,'utf-8') for i in items])
+                #print u'processing ' + u'|'.join([unicode(i,'utf-8') for i in items])
                 self.process(items,time, 1000000000)
 
-            except BaseException as e:
-                print("%s(%d): syntax error %s "%(in_file,self.iline,e))
-                traceback.print_exc()
+            except ValueError as e:
+                self.nerrs +=1
+                #print("%s(%d): syntax error %s "%(in_file,self.iline,e))
+                #traceback.print_exc()
 #               raise Error(e)
-
+        print "processed %s errors %d"%(in_file,self.nerrs)
     @staticmethod
     def sample(start,time,taglist):
 #        if len(taglist)==0:
@@ -133,7 +137,9 @@ class TimeQuery:
 
             #awords = re.compile(u'[ /:?&|=\\,@#\]\[\(\)]+').split((self.pitems[2]+" "+self.pitems[3]).lower())
             #words = filter(lambda w: re.compile('[a-zA-Z]').search(w),awords)
-            ss = (self.pitems[2]+" "+self.pitems[3].replace('/',' '))
+            import urllib
+            p3 = urllib.unquote_plus(self.pitems[3]).replace('/',' ').replace('=',' ').replace('?', '   ')
+            ss = (self.pitems[2]+" "+p3)
             awords = re.compile('[ /:?&|=\\,@#\]\[\(\)]+').split(ss)
             words = [ unicode(w,'utf-8').lower().encode('utf-8') for w in awords if re.compile('[\w]',re.UNICODE).search(unicode(w, 'utf-8'))]
 
