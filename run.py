@@ -47,8 +47,9 @@ def run(args):
         args.file = args.file or "*.log"
 
         opts = timenode.TimeQuery(samples=args.samples, tree=args.tree)
-        opts.tasks = timenode.loadTasks(os.path.join(args.dir,"tasks.cat"))
-
+        opts.tasks = timenode.loadTasks(os.path.join(args.dir, "tasks.cat"))
+        opts.total = timenode.loadTasks(os.path.join(args.dir, "tasks.cat"))
+        opts.total.tag = "**ONLINE**"
         opts.min_time = int(args.duration*60000)
         opts.min_percent = float(args.percent)
 

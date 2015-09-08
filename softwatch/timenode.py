@@ -157,6 +157,9 @@ class TimeQuery:
             elif (dt>self.away_timeout):
                 smpl = self.sample(self.ptime,self.away_timeout,words)
                 if keeptime>0:
+                    mytask = smpl.task = self.tasks.putExpr(words, smpl)
+                    if mytask:
+                        words = [mytask.tag]+words
                     self.total.put(words, smpl)
                 if keeptime>0:
                     self.away.put([],self.sample(self.ptime+self.away_timeout,dt-self.away_timeout,words)) #,str(int(dt/away_timeout))+'x'
@@ -166,8 +169,8 @@ class TimeQuery:
                 mytask = smpl.task = self.tasks.putExpr(words, smpl)
                 if keeptime>0:
                     if mytask:
-                        words = ["["+mytask.tag+"]"]+words
-                    self.total.put(words, smpl,10)
+                        words = [mytask.tag]+words
+                    self.total.put(words, smpl,1000)
             self.ptime = time
             self.pitems = items
             return mytask
@@ -190,9 +193,11 @@ class TimeNode:
     def __init__(self, tag, parent = None, time = 0, count = 0, tqueue = None,expr=[]):
         self.tag = tag
         self.count = count
+#        if tag[0]=='[':
+#            time=time+10000
         self.time = time
         #self.wcount = wcount
-        self.children = SortedSet(key=lambda node:-node.time)
+        self.children = SortedSet(key=lambda node:-(node.time+(10000000000 if node.tag[0]=='[' else 0)))
         self.samples = []
         self.parent = parent
         self.expr = expr
@@ -433,7 +438,7 @@ class TimeNode:
     def printsample(samp, text):
         tsk=""
         if samp.task:
-            tsk = "["+samp.task.tag+"] "
+            tsk = samp.task.tag
         print("|%s|%s|%s%s"%(TimeNode.fmt_delta_time(samp.time), TimeNode.fmt_time(samp.start), tsk,' '.join(samp.tags)))
 
 
@@ -455,12 +460,12 @@ class TimeNode:
 
         nperiods = options.nperiods()
         stime=node.tqueue.sum()
-        if node.parent and node.parent.parent:
-            spercent = " %4.1f%%"%percent
-        elif node.parent:
-            spercent="%4.1f%% "%percent
-        else:
-            spercent="%4.1f%%"%percent
+        #if node.parent and node.parent.parent:
+        spercent = " %4.1f%% "%percent if percent<100 else "  100% "
+        #elif node.parent:
+        #    spercent="% 4.1f%% "%percent
+        #else:
+        #    spercent="% 4.1f%%"%percent
 
         s=u'{}|{}|{:5d}|{}|{}' .format (TimeNode.fmt_delta_time(int(node.time/nperiods)), TimeNode.fmt_delta_time_mins(stime), node.count, spercent, text)
         print(s)
@@ -484,11 +489,12 @@ def loadTasks(in_file):
             if len(kv)<2:
                 print "invalid category:(%s)"%line
                 continue
-            tag = kv[0].strip()
-            tn = TimeNode(unicode(tag))
+            tag = "["+kv[0].strip()+"]"
+            tn = TimeNode(tag)
             tn.expr = [[y.strip() for y in x.split(' ') if len(y.strip())>0] for x in kv[1].split('||')]
             #print "load tag "+unicode(tn.expr)
             tasks.children.add(tn)
+            tn.parent=tasks
         file.close()
     except BaseException as e:
         traceback.print_exc()
